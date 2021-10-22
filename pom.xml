@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>fr.li212.codingame</groupId>
+    <artifactId>codingame-mars</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>codingame-mars-ia</module>
+        <module>codingame-mars-simulator</module>
+        <module>codingame-mars-entities</module>
+        <module>codingame-mars-application</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <file.merger.jar>CGFileMerge-1.0.3-SNAPSHOT.jar</file.merger.jar>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>my-exec</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-jar</argument>
+                        <argument>${file.merger.jar}</argument>
+                        <argument>once</argument>
+                        <argument>${basedir}/codingame-mars-ia/target/generated-sources/Merged.java</argument>
+                        <argument>${basedir}/codingame-mars-ia/src/main/java</argument>
+                        <argument>${basedir}/codingame-mars-entities/src/main/java</argument>
+                        <argument>${basedir}/codingame-mars-application/src/main/java/fr/li212/codingame/mars/application/codingame</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
