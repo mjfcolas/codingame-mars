@@ -25,6 +25,10 @@ public class Vector {
         return new Vector(this.x + toAdd.getX(), this.y + toAdd.getY());
     }
 
+    public Vector multiply(final int coefficient){
+        return new Vector(this.x * coefficient, this.y * coefficient);
+    }
+
     @Override
     public String toString() {
         return "Vector{" +

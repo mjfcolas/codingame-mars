@@ -39,7 +39,7 @@ class Player {
                     COMMAND_FROM_TRAJECTORY_AND_LANDER_STATE,
                     ground,
                     landerState
-            ).command());
+            ).command().getCommand());
         }
     }
 }

@@ -11,7 +11,8 @@ import fr.li212.codingame.mars.ia.command.implementations.BasicCommand;
 import fr.li212.codingame.mars.ia.trajectory.ComputeTrajectory;
 import fr.li212.codingame.mars.ia.trajectory.implementations.ComputeLinearTrajectory;
 import fr.li212.codingame.mars.simulator.StartSimulator;
-import fr.li212.codingame.mars.simulator.engine.AskForLanderCommand;
+import fr.li212.codingame.mars.simulator.engine.AskForIaComputation;
+import fr.li212.codingame.mars.simulator.engine.mechanics.AugmentedLanderState;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -31,12 +32,16 @@ public class SimulatorApplication extends Application {
                     new Surface(new Coordinate(5500, 150), new Coordinate(6999, 800)))
     );
 
-    private final static LanderState INITIAL_LANDER_STATE = new LanderState(
-            new Coordinate(2500, 2700), new Vector(0, 0), 550, 0, 0);
+    private final static AugmentedLanderState INITIAL_LANDER_STATE = new AugmentedLanderState(
+            new LanderState(
+                    new Coordinate(2500, 2700), new Vector(0, 0), 550, 0, 0),
+            new Vector(0, 0),
+            new Vector(0, 0)
+    );
 
     private final static LanderCommand INITIAL_LANDER_COMMAND = new LanderCommand(0, 0);
 
-    private final static AskForLanderCommand ASK_FOR_IA_COMMAND = new AskForIaCommand(
+    private final static AskForIaComputation ASK_FOR_IA_COMMAND = new AskForIaComputations(
             COMPUTE_TRAJECTORY,
             COMMAND_FROM_TRAJECTORY_AND_LANDER_STATE,
             GROUND);

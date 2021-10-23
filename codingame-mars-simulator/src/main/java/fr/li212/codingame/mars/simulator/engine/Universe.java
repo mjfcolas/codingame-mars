@@ -1,33 +1,37 @@
 package fr.li212.codingame.mars.simulator.engine;
 
+import fr.li212.codingame.mars.domain.entities.IaComputation;
 import fr.li212.codingame.mars.domain.entities.ground.Ground;
 import fr.li212.codingame.mars.domain.entities.lander.LanderCommand;
 import fr.li212.codingame.mars.domain.entities.lander.LanderState;
+import fr.li212.codingame.mars.domain.entities.trajectory.ParametricCurve;
 import fr.li212.codingame.mars.simulator.SimulatorParameters;
+import fr.li212.codingame.mars.simulator.engine.mechanics.AugmentedLanderState;
+import fr.li212.codingame.mars.simulator.engine.mechanics.ComputeNewState;
 
 import javax.swing.event.EventListenerList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class Universe {
-    private final AskForLanderCommand askForLanderCommand;
+    private final AskForIaComputation askForIaComputation;
 
     private final EventListenerList listeners = new EventListenerList();
 
     private final Ground ground;
     private LanderCommand currentCommand;
-    private LanderState landerState;
+    private AugmentedLanderState landerState;
 
     public Universe(
-            final AskForLanderCommand askForLanderCommand,
+            final AskForIaComputation askForIaComputation,
             final Ground ground,
             final LanderCommand initialCommand,
-            final LanderState initialState) {
-        this.askForLanderCommand = askForLanderCommand;
+            final AugmentedLanderState initialState) {
+        this.askForIaComputation = askForIaComputation;
         this.ground = ground;
         this.currentCommand = initialCommand;
         this.landerState = initialState;
-        triggerAllListeners();
+        triggerNewState(initialState);
 
         final Timer timer = new Timer();
         final TickTask tickTask = new TickTask();
@@ -37,9 +41,12 @@ public class Universe {
     private class TickTask extends TimerTask {
         @Override
         public void run() {
-            landerState = ComputeNewState.compute(landerState, currentCommand);
-            currentCommand = askForLanderCommand.command(landerState);
-            triggerAllListeners();
+            final IaComputation iaComputation = askForIaComputation.compute(landerState.getLanderState());
+            triggerNewTrajectory(iaComputation.getTrajectory());
+            currentCommand = ComputeEffectiveCommand.get(iaComputation.getCommand(), landerState.getLanderState());
+            final AugmentedLanderState augmentedLanderState = ComputeNewState.compute(landerState.getLanderState(), currentCommand);
+            landerState = augmentedLanderState;
+            triggerNewState(augmentedLanderState);
         }
     }
 
@@ -51,9 +58,14 @@ public class Universe {
         return ground;
     }
 
-    private void triggerAllListeners() {
+    private void triggerNewState(final AugmentedLanderState augmentedLanderState) {
         for (final UniverseListener listener : listeners.getListeners(UniverseListener.class)) {
-            listener.tick(landerState);
+            listener.newState(augmentedLanderState);
+        }
+    }
+    private void triggerNewTrajectory(final ParametricCurve parametricCurve){
+        for (final UniverseListener listener : listeners.getListeners(UniverseListener.class)) {
+            listener.newTrajectory(parametricCurve);
         }
     }
 }

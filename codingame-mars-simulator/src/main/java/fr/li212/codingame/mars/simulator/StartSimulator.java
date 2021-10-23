@@ -6,8 +6,9 @@ import fr.li212.codingame.mars.domain.entities.lander.LanderCommand;
 import fr.li212.codingame.mars.domain.entities.lander.LanderState;
 import fr.li212.codingame.mars.simulator.display.DisplayedUniverse;
 import fr.li212.codingame.mars.simulator.display.PrintParameters;
-import fr.li212.codingame.mars.simulator.engine.AskForLanderCommand;
+import fr.li212.codingame.mars.simulator.engine.AskForIaComputation;
 import fr.li212.codingame.mars.simulator.engine.Universe;
+import fr.li212.codingame.mars.simulator.engine.mechanics.AugmentedLanderState;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
@@ -19,11 +20,11 @@ public class StartSimulator {
     private final DisplayedUniverse displayedUniverse;
 
     public StartSimulator(
-            final AskForLanderCommand askForLanderCommand,
+            final AskForIaComputation askForIaComputation,
             final Ground ground,
             final LanderCommand initialCommand,
-            final LanderState initialLanderState) {
-        this.universe = new Universe(askForLanderCommand, ground, initialCommand, initialLanderState);
+            final AugmentedLanderState initialLanderState) {
+        this.universe = new Universe(askForIaComputation, ground, initialCommand, initialLanderState);
         this.displayedUniverse = new DisplayedUniverse(universe);
     }
 

@@ -16,4 +16,12 @@ public class LanderCommand {
     public int getThrust() {
         return thrust;
     }
+
+    @Override
+    public String toString() {
+        return "LanderCommand{" +
+                "angle=" + angle +
+                ", thrust=" + thrust +
+                '}';
+    }
 }

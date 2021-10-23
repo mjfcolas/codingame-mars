@@ -1,15 +1,25 @@
 package fr.li212.codingame.mars.simulator.display;
 
-import fr.li212.codingame.mars.domain.entities.lander.LanderState;
+import fr.li212.codingame.mars.domain.entities.Coordinate;
+import fr.li212.codingame.mars.domain.entities.lander.Vector;
+import fr.li212.codingame.mars.domain.entities.trajectory.ParametricCurve;
 import fr.li212.codingame.mars.simulator.engine.Universe;
 import fr.li212.codingame.mars.simulator.engine.UniverseListener;
+import fr.li212.codingame.mars.simulator.engine.mechanics.AugmentedLanderState;
 import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DisplayedUniverse extends Parent implements UniverseListener {
+
+    private final List<Shape> shapesToClean = new ArrayList<>();
 
     public DisplayedUniverse(final Universe universe) {
         universe.getGround().getSurfaces().forEach(surface -> {
@@ -25,18 +35,46 @@ public class DisplayedUniverse extends Parent implements UniverseListener {
     }
 
     @Override
-    public void tick(final LanderState landerState) {
+    public void newState(final AugmentedLanderState augmentedLanderState) {
         Platform.runLater(() -> {
-            final Rectangle lander = new Rectangle(PrintParameters.LANDER_WIDTH, PrintParameters.LANDER_HEIGHT);
-            lander.setX(
-                    landerState.getCoordinates().changeOrigin().getX() / PrintParameters.REDUCTION_FACTOR - PrintParameters.LANDER_WIDTH / 2);
-            lander.setY(
-                    landerState.getCoordinates().changeOrigin().getY() / PrintParameters.REDUCTION_FACTOR - PrintParameters.LANDER_HEIGHT
-            );
-            lander.setStroke(Color.WHITE);
-            lander.setStrokeWidth(1);
-            getChildren().add(lander);
+            this.printVector(
+                    augmentedLanderState.getLanderState().getCoordinates(),
+                    augmentedLanderState.getThrustVector(),
+                    Color.YELLOW);
+            this.printVector(
+                    augmentedLanderState.getLanderState().getCoordinates(),
+                    augmentedLanderState.getAccelerationVector(),
+                    Color.rgb(154,236,219));
         });
 
+    }
+
+    private void printVector(final Coordinate startPoint, final Vector vector, final Paint color) {
+        final Vector endPointVector = vector.multiply(100).add(new Vector(startPoint.getX(), startPoint.getY()));
+        final Coordinate endPoint = new Coordinate((int) endPointVector.getX(), (int) endPointVector.getY());
+        final Line vectorLine = new Line(
+                startPoint.changeOrigin().getX() / PrintParameters.REDUCTION_FACTOR,
+                startPoint.changeOrigin().getY() / PrintParameters.REDUCTION_FACTOR,
+                endPoint.changeOrigin().getX() / PrintParameters.REDUCTION_FACTOR,
+                endPoint.changeOrigin().getY() / PrintParameters.REDUCTION_FACTOR);
+        vectorLine.setStroke(color);
+        vectorLine.setStrokeWidth(3);
+        getChildren().add(vectorLine);
+    }
+
+    @Override
+    public void newTrajectory(final ParametricCurve parametricCurve) {
+        Platform.runLater(() -> {
+            getChildren().removeAll(shapesToClean);
+            parametricCurve.getParametricPoints().forEach(parametricPoint -> {
+                final Circle point = new Circle(
+                        parametricPoint.getCoordinate().changeOrigin().getX() / PrintParameters.REDUCTION_FACTOR,
+                        parametricPoint.getCoordinate().changeOrigin().getY() / PrintParameters.REDUCTION_FACTOR,
+                        1,
+                        Color.WHITE);
+                shapesToClean.add(point);
+                getChildren().add(point);
+            });
+        });
     }
 }

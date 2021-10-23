@@ -1,7 +1,7 @@
 package fr.li212.codingame.mars.ia;
 
 import fr.li212.codingame.mars.domain.entities.ground.Ground;
-import fr.li212.codingame.mars.domain.entities.lander.LanderCommand;
+import fr.li212.codingame.mars.domain.entities.IaComputation;
 import fr.li212.codingame.mars.domain.entities.lander.LanderState;
 import fr.li212.codingame.mars.domain.entities.trajectory.ParametricCurve;
 import fr.li212.codingame.mars.ia.command.CommandFromTrajectoryAndLanderState;
@@ -26,8 +26,10 @@ public class CommandLander {
         this.landerState = landerState;
     }
 
-    public LanderCommand command() {
+    public IaComputation command() {
         final ParametricCurve trajectory = this.computeTrajectory.compute(landerState.getCoordinates(), ground.getTargetLandingCoordinates(), ground);
-        return commandFromTrajectoryAndLanderState.command(trajectory, landerState);
+        return new IaComputation(
+                trajectory,
+                commandFromTrajectoryAndLanderState.command(trajectory, landerState));
     }
 }
