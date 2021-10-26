@@ -8,32 +8,29 @@ public class Ground {
 
     private final List<Surface> surfaces;
 
-    private final Coordinate targetLandingCoordinates;
+    private final Surface landingSurface;
 
     public Ground(final List<Surface> surfaces) {
         this.surfaces = surfaces;
-        final Surface landingSurface = surfaces.stream()
+        this.landingSurface = surfaces.stream()
                 .filter(surface -> surface.getStartCoordinate().getY() == surface.getEndCoordinate().getY())
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No landing site available"));
-        targetLandingCoordinates = new Coordinate(
-                (int) (0.5 * (landingSurface.getEndCoordinate().getX() + landingSurface.getStartCoordinate().getX())),
-                landingSurface.getStartCoordinate().getY());
     }
 
     public List<Surface> getSurfaces() {
         return surfaces;
     }
 
-    public Coordinate getTargetLandingCoordinates() {
-        return targetLandingCoordinates;
+    public Surface getLandingSurface() {
+        return landingSurface;
     }
 
     @Override
     public String toString() {
         return "Ground{" +
                 "surfaces=" + surfaces +
-                ", targetLandingCoordinates=" + targetLandingCoordinates +
+                ", targetLandingCoordinates=" + landingSurface +
                 '}';
     }
 }

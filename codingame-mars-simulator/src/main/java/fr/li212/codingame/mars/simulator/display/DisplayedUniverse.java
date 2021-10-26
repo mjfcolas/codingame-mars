@@ -2,10 +2,10 @@ package fr.li212.codingame.mars.simulator.display;
 
 import fr.li212.codingame.mars.domain.entities.Coordinate;
 import fr.li212.codingame.mars.domain.entities.lander.Vector;
+import fr.li212.codingame.mars.domain.entities.mechanics.LanderMechanicState;
 import fr.li212.codingame.mars.domain.entities.trajectory.ParametricCurve;
 import fr.li212.codingame.mars.simulator.engine.Universe;
 import fr.li212.codingame.mars.simulator.engine.UniverseListener;
-import fr.li212.codingame.mars.simulator.engine.mechanics.AugmentedLanderState;
 import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
@@ -35,15 +35,15 @@ public class DisplayedUniverse extends Parent implements UniverseListener {
     }
 
     @Override
-    public void newState(final AugmentedLanderState augmentedLanderState) {
+    public void newState(final LanderMechanicState landerMechanicState) {
         Platform.runLater(() -> {
             this.printVector(
-                    augmentedLanderState.getLanderState().getCoordinates(),
-                    augmentedLanderState.getThrustVector(),
+                    new Coordinate((int)landerMechanicState.getPosition().getX(), (int)landerMechanicState.getPosition().getY()),
+                    landerMechanicState.getThrustVector(),
                     Color.YELLOW);
             this.printVector(
-                    augmentedLanderState.getLanderState().getCoordinates(),
-                    augmentedLanderState.getAccelerationVector(),
+                    new Coordinate((int)landerMechanicState.getPosition().getX(), (int)landerMechanicState.getPosition().getY()),
+                    landerMechanicState.getAcceleration(),
                     Color.rgb(154,236,219));
         });
 

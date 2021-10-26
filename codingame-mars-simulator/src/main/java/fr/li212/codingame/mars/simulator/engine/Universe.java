@@ -1,13 +1,14 @@
 package fr.li212.codingame.mars.simulator.engine;
 
+import fr.li212.codingame.mars.domain.entities.Coordinate;
 import fr.li212.codingame.mars.domain.entities.IaComputation;
 import fr.li212.codingame.mars.domain.entities.ground.Ground;
 import fr.li212.codingame.mars.domain.entities.lander.LanderCommand;
 import fr.li212.codingame.mars.domain.entities.lander.LanderState;
+import fr.li212.codingame.mars.domain.entities.mechanics.LanderMechanicState;
 import fr.li212.codingame.mars.domain.entities.trajectory.ParametricCurve;
 import fr.li212.codingame.mars.simulator.SimulatorParameters;
-import fr.li212.codingame.mars.simulator.engine.mechanics.AugmentedLanderState;
-import fr.li212.codingame.mars.simulator.engine.mechanics.ComputeNewState;
+import fr.li212.codingame.mars.domain.entities.mechanics.ComputeNewState;
 
 import javax.swing.event.EventListenerList;
 import java.util.Timer;
@@ -31,7 +32,7 @@ public class Universe {
         this.ground = ground;
         this.currentCommand = initialCommand;
         this.landerState = initialState;
-        triggerNewState(initialState);
+        triggerNewState(initialState.getLanderMechanicState());
 
         final Timer timer = new Timer();
         final TickTask tickTask = new TickTask();
@@ -44,9 +45,17 @@ public class Universe {
             final IaComputation iaComputation = askForIaComputation.compute(landerState.getLanderState());
             triggerNewTrajectory(iaComputation.getTrajectory());
             currentCommand = ComputeEffectiveCommand.get(iaComputation.getCommand(), landerState.getLanderState());
-            final AugmentedLanderState augmentedLanderState = ComputeNewState.compute(landerState.getLanderState(), currentCommand);
-            landerState = augmentedLanderState;
-            triggerNewState(augmentedLanderState);
+            final LanderMechanicState landerMechanicState = ComputeNewState.compute(landerState.getLanderState(), currentCommand, SimulatorParameters.TICK_SIMULATED_DURATION_IN_SECONDS);
+            landerState = new AugmentedLanderState(
+                    new LanderState(
+                            new Coordinate((int) landerMechanicState.getPosition().getX(), (int) landerMechanicState.getPosition().getY()),
+                            landerMechanicState.getSpeed(),
+                            landerState.getLanderState().getRemainingFuel(),
+                            currentCommand.getAngle(),
+                            currentCommand.getThrust()
+                    ),
+                    landerMechanicState);
+            triggerNewState(landerMechanicState);
         }
     }
 
@@ -58,12 +67,13 @@ public class Universe {
         return ground;
     }
 
-    private void triggerNewState(final AugmentedLanderState augmentedLanderState) {
+    private void triggerNewState(final LanderMechanicState landerMechanicState) {
         for (final UniverseListener listener : listeners.getListeners(UniverseListener.class)) {
-            listener.newState(augmentedLanderState);
+            listener.newState(landerMechanicState);
         }
     }
-    private void triggerNewTrajectory(final ParametricCurve parametricCurve){
+
+    private void triggerNewTrajectory(final ParametricCurve parametricCurve) {
         for (final UniverseListener listener : listeners.getListeners(UniverseListener.class)) {
             listener.newTrajectory(parametricCurve);
         }

@@ -20,8 +20,12 @@ public class Coordinate {
         return y;
     }
 
-    public Coordinate changeOrigin(){
+    public Coordinate changeOrigin() {
         return new Coordinate(x, GlobalParameters.ZONE_HEIGHT - y);
+    }
+
+    public int squareDistance(final Coordinate otherCoordinate) {
+        return (int)(Math.pow(otherCoordinate.getX() - this.x, 2) + Math.pow(otherCoordinate.getY() -this.y, 2));
     }
 
     @Override
