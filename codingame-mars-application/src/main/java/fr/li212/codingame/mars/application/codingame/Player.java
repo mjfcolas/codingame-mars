@@ -7,7 +7,6 @@ import fr.li212.codingame.mars.domain.entities.ground.Ground;
 import fr.li212.codingame.mars.domain.entities.lander.LanderState;
 import fr.li212.codingame.mars.ia.CommandLander;
 import fr.li212.codingame.mars.ia.command.PredictCommand;
-import fr.li212.codingame.mars.ia.command.implementations.BasicPredictCommand;
 import fr.li212.codingame.mars.ia.command.implementations.PredictCommandWithAdjustNewtonTrajectory;
 import fr.li212.codingame.mars.ia.io.TurnInput;
 import fr.li212.codingame.mars.ia.io.TurnOutput;

@@ -36,9 +36,6 @@ public class Vector {
     public Vector add(final Vector toAdd){
         return new Vector(this.x + toAdd.getX(), this.y + toAdd.getY());
     }
-    public Vector remove(final Vector toRemove){
-        return new Vector(this.x - toRemove.getX(), this.y - toRemove.getY());
-    }
 
     public Vector multiply(final int coefficient){
         return new Vector(this.x * coefficient, this.y * coefficient);
