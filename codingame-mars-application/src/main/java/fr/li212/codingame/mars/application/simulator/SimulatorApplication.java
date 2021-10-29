@@ -25,7 +25,7 @@ import java.util.Arrays;
 public class SimulatorApplication extends Application {
     private static final PredictCommand COMMAND_FROM_TRAJECTORY_AND_LANDER_STATE = new PredictCommandWithAdjustNewtonTrajectory();
 
-    private final static Level level = Level5.get();
+    private final static Level level = Level2.get();
     private final static AskForIaComputation ASK_FOR_IA_COMMAND = new AskForIaComputations(
             COMMAND_FROM_TRAJECTORY_AND_LANDER_STATE,
             level.getGround());
