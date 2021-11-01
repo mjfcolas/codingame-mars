@@ -1,112 +1,85 @@
 package fr.li212.codingame.mars.ia.command.implementations;
 
-import fr.li212.codingame.mars.domain.entities.Coordinate;
 import fr.li212.codingame.mars.domain.entities.GlobalParameters;
+import fr.li212.codingame.mars.domain.entities.IaComputation;
 import fr.li212.codingame.mars.domain.entities.ground.Ground;
 import fr.li212.codingame.mars.domain.entities.lander.LanderCommand;
 import fr.li212.codingame.mars.domain.entities.lander.LanderState;
 import fr.li212.codingame.mars.domain.entities.trajectory.ParametricCurve;
 import fr.li212.codingame.mars.domain.entities.trajectory.ParametricPoint;
+import fr.li212.codingame.mars.ia.command.PredictCommand;
+import fr.li212.codingame.mars.ia.trajectory.ComputeTrajectory;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PredictCommandWithAdjustNewtonTrajectory {
+public class PredictVerticalCommandAdjustingTrajectory implements PredictCommand {
 
-    private static final int MARGIN_FOR_LANDING = 14;
+    private static final int MARGIN_FOR_LANDING = 5;
     private static final int VERTICAL_SPEED_MARGIN = 1;
     private static final int MAX_TILT_TO_FIGHT_GRAVITY = (int) Math.toDegrees(Math.acos(GlobalParameters.GRAVITY_ACCELERATION / GlobalParameters.MAX_THRUST));
-    private static final int ALTITUDE_MARGIN_FOR_SAFE_TRAJECTORY = 5;
+    private static final int ALTITUDE_MARGIN_FOR_SAFE_TRAJECTORY = 40;
 
 
     private final LanderState landerState;
     private final Ground ground;
     private final ParametricCurve trajectory;
     private final int landingSurfaceHeight;
-    private final int minXForLanding;
-    private final int maxXForLanding;
     private final int minTargetXForLanding;
     private final int maxTargetXForLanding;
     private final ParametricPoint pointClosestToLanding;
 
-    public PredictCommandWithAdjustNewtonTrajectory(
+    public PredictVerticalCommandAdjustingTrajectory(
+            final ComputeTrajectory computeTrajectory,
             final LanderState landerState,
-            final Ground ground,
-            final ParametricCurve trajectory
-    ) {
+            final Ground ground) {
+        System.err.println("VERTICAL COMMAND IMPLEMENTATION");
+        this.trajectory = computeTrajectory.compute(landerState);
         this.landerState = landerState;
         this.ground = ground;
-        this.trajectory = trajectory;
         this.landingSurfaceHeight = ground.getLandingSurface().getStartCoordinate().getY();
-        this.minXForLanding = ground.getLandingSurface().getStartCoordinate().getX();
-        this.maxXForLanding = ground.getLandingSurface().getEndCoordinate().getX();
-        this.minTargetXForLanding = minXForLanding + MARGIN_FOR_LANDING;
-        this.maxTargetXForLanding = maxXForLanding - MARGIN_FOR_LANDING;
+        this.minTargetXForLanding = ground.getLandingSurface().getStartCoordinate().getX() + MARGIN_FOR_LANDING;
+        this.maxTargetXForLanding = ground.getLandingSurface().getEndCoordinate().getX() - MARGIN_FOR_LANDING;
         this.pointClosestToLanding = trajectory.getParametricPoints().stream()
-                .sorted(Comparator.comparingInt(p -> Math.abs(p.getCoordinate().getY() - landingSurfaceHeight)))
-                .findFirst().get();
+                .min(Comparator.comparingInt(p -> Math.abs(p.getCoordinate().getY() - landingSurfaceHeight)))
+                .orElseThrow(IllegalStateException::new);
     }
 
-    public LanderCommand command() {
-
+    @Override
+    public IaComputation command() {
         final double maxLoseOfSpeedFromNowToImpact = computeMaximumLoseOfSpeedBeforeImpact(pointClosestToLanding, 0);
         final double maxSpeedAtCurrentPoint = GlobalParameters.MAX_VERTICAL_SPEED_AT_LANDING - VERTICAL_SPEED_MARGIN + maxLoseOfSpeedFromNowToImpact;
 
         //Final Phase
-        if (landerState.getCoordinates().getY() - landingSurfaceHeight < GlobalParameters.MAX_VERTICAL_SPEED_AT_LANDING * 3) {
-            return new LanderCommand(0, GlobalParameters.MAX_THRUST);
+        if (landerState.getCoordinates().getY() - landingSurfaceHeight < GlobalParameters.MAX_VERTICAL_SPEED_AT_LANDING) {
+            return output(new LanderCommand(0, GlobalParameters.MAX_THRUST));
         }
-
-        //Horizontal/Vertical ratio too big: keep calm and stabilize
-        final Coordinate targetCoordinates = new Coordinate(minXForLanding + maxXForLanding / 2, landingSurfaceHeight);
-        if (Math.abs((targetCoordinates.getX() - landerState.getCoordinates().getX()) / (targetCoordinates.getY() - landerState.getCoordinates().getY())) > 2
-                && Math.abs(landerState.getSpeed().getX()) > 2 * GlobalParameters.MAX_HORIZONTAL_SPEED_AT_LANDING) {
-            if (landerState.getSpeed().getX() > 0) {
-                return new LanderCommand(MAX_TILT_TO_FIGHT_GRAVITY / 4, GlobalParameters.MAX_THRUST);
-            } else {
-                return new LanderCommand(-MAX_TILT_TO_FIGHT_GRAVITY / 4, GlobalParameters.MAX_THRUST);
-            }
-        }
-
-        final int heightAboveLandingPoint = landerState.getCoordinates().getY() - landingSurfaceHeight;
 
         // Correct trajectory phase
         if (pointClosestToLanding.getCoordinate().getX() < minTargetXForLanding) {
             System.err.println("A");
-            if(heightAboveLandingPoint > 700) {
-                return computeCommand(-GlobalParameters.MAX_TILT / 2);
-            }else{
-                return computeCommand(-GlobalParameters.MAX_TILT / 8);
-            }
+            return output(computeCommand(-GlobalParameters.MAX_TILT / 2));
         } else if (pointClosestToLanding.getCoordinate().getX() > maxTargetXForLanding) {
             System.err.println("B");
-            if(heightAboveLandingPoint > 700) {
-                return computeCommand(GlobalParameters.MAX_TILT / 2);
-            }else{
-                return computeCommand(GlobalParameters.MAX_TILT / 8);
-            }
+            return output(computeCommand(GlobalParameters.MAX_TILT / 2));
         } else if (Math.abs(landerState.getSpeed().getX()) > (GlobalParameters.MAX_HORIZONTAL_SPEED_AT_LANDING) && landerState.getSpeed().getX() > 0) {
             System.err.println("C");
-            if(heightAboveLandingPoint > 600) {
-                return computeCommand(MAX_TILT_TO_FIGHT_GRAVITY);
-            }else{
-                return computeCommand(2*MAX_TILT_TO_FIGHT_GRAVITY);
-            }
+            return output(computeCommand(MAX_TILT_TO_FIGHT_GRAVITY));
         } else if (Math.abs(landerState.getSpeed().getX()) > (GlobalParameters.MAX_HORIZONTAL_SPEED_AT_LANDING) && landerState.getSpeed().getX() < 0) {
             System.err.println("D");
-            if(heightAboveLandingPoint > 600) {
-                return computeCommand(-MAX_TILT_TO_FIGHT_GRAVITY);
-            }else{
-                return computeCommand(-2*MAX_TILT_TO_FIGHT_GRAVITY);
-            }
+            return output(computeCommand(-MAX_TILT_TO_FIGHT_GRAVITY));
         } else if (Math.abs(landerState.getSpeed().getY()) > maxSpeedAtCurrentPoint) {
             System.err.println("E");
-            return computeCommand(0);
+            return output(computeCommand(0));
         } else {
             System.err.println("F");
-            return new LanderCommand(0, 0);
+            return output(new LanderCommand(0, 0));
         }
+    }
+
+    private IaComputation output(final LanderCommand command){
+        return new IaComputation(this.trajectory, command);
     }
 
     private LanderCommand computeCommand(final int targetTilt) {
@@ -117,11 +90,8 @@ public class PredictCommandWithAdjustNewtonTrajectory {
                 thrust = GlobalParameters.MAX_THRUST;
             } else {
                 final int maxSpeedAtCurrentPoint = (int) (GlobalParameters.MAX_VERTICAL_SPEED_AT_LANDING - VERTICAL_SPEED_MARGIN + computeMaximumLoseOfSpeedBeforeImpact(pointClosestToLanding, targetTilt));
-                thrust = Math.abs(landerState.getSpeed().getY()) > maxSpeedAtCurrentPoint ? GlobalParameters.MAX_THRUST : GlobalParameters.MAX_THRUST - 1;
+                thrust = Math.abs(landerState.getSpeed().getY()) > maxSpeedAtCurrentPoint ? GlobalParameters.MAX_THRUST : GlobalParameters.MAX_THRUST - 2;
             }
-
-
-
             return new LanderCommand(targetTilt, thrust);
         } else {
             return new LanderCommand(targetTilt, 0);
@@ -144,11 +114,11 @@ public class PredictCommandWithAdjustNewtonTrajectory {
 
         boolean potentiallyUnsafe = false;
         boolean unsafe = false;
-        for (int i = 0; i < safeStatusForTrajectoryPoints.size(); i++) {
-            if (!safeStatusForTrajectoryPoints.get(i)) {
+        for (Boolean safeStatusForTrajectoryPoint : safeStatusForTrajectoryPoints) {
+            if (!safeStatusForTrajectoryPoint) {
                 potentiallyUnsafe = true;
             }
-            if (potentiallyUnsafe && safeStatusForTrajectoryPoints.get(i)) {
+            if (potentiallyUnsafe && safeStatusForTrajectoryPoint) {
                 unsafe = true;
             }
         }

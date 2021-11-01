@@ -1,13 +1,13 @@
 package fr.li212.codingame.mars.application.simulator;
 
-import fr.li212.codingame.mars.application.simulator.levels.Level1;
+import fr.li212.codingame.mars.application.simulator.levels.Level5;
 import fr.li212.codingame.mars.simulator.StartSimulator;
 import fr.li212.codingame.mars.simulator.engine.AskForIaComputation;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class SimulatorApplication extends Application {
-    private final static Level level = Level1.get();
+    private final static Level level = Level5.get();
     private final static AskForIaComputation ASK_FOR_IA_COMMAND = new AskForIaComputations(
             level.getGround());
 

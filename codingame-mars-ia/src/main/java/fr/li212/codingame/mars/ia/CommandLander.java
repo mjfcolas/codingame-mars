@@ -3,24 +3,21 @@ package fr.li212.codingame.mars.ia;
 import fr.li212.codingame.mars.domain.entities.IaComputation;
 import fr.li212.codingame.mars.domain.entities.ground.Ground;
 import fr.li212.codingame.mars.domain.entities.lander.LanderState;
-import fr.li212.codingame.mars.domain.entities.trajectory.ParametricCurve;
-import fr.li212.codingame.mars.ia.command.implementations.PredictCommandWithAdjustNewtonTrajectory;
+import fr.li212.codingame.mars.ia.command.PredictCommand;
 import fr.li212.codingame.mars.ia.trajectory.ComputeNewtonTrajectory;
 
 public class CommandLander {
 
-    private final ComputeNewtonTrajectory computeNewtonTrajectory = new ComputeNewtonTrajectory();
-    private final Ground ground;
+    private final PredictCommandFactory predictCommandFactory;
 
     public CommandLander(final Ground ground) {
-        this.ground = ground;
+        this.predictCommandFactory = new PredictCommandFactory(
+                new ComputeNewtonTrajectory(), ground.getLandingSurface().getEndCoordinate().getY() < 2000,
+                ground);
     }
 
     public IaComputation command(final LanderState landerState) {
-        final ParametricCurve trajectory = this.computeNewtonTrajectory.compute(landerState);
-        final PredictCommandWithAdjustNewtonTrajectory predictCommand = new PredictCommandWithAdjustNewtonTrajectory(landerState, ground, trajectory);
-        return new IaComputation(
-                trajectory,
-                predictCommand.command());
+        final PredictCommand predictCommand = predictCommandFactory.get(landerState);
+        return predictCommand.command();
     }
 }

@@ -13,8 +13,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class ComputeNewtonTrajectory {
+public class ComputeNewtonTrajectory implements ComputeTrajectory {
 
+    @Override
     public ParametricCurve compute(final LanderState landerState) {
         final LanderMechanicState landerMechanicStateAfterOneTick = ComputeNewState.compute(landerState, new LanderCommand(landerState.getAngle(), landerState.getThrustPower()), 1);
         final ParametricPoint firstPoint = new ParametricPoint((double) 1 / ParametricCurve.NUMBER_OF_POINTS, new Coordinate((int) landerMechanicStateAfterOneTick.getPosition().getX(), (int) landerMechanicStateAfterOneTick.getPosition().getY()));
